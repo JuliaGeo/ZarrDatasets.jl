@@ -1,0 +1,6 @@
+
+## ZarrDatasets
+
+```@autodocs
+Modules = [ZarrDatasets]
+```
