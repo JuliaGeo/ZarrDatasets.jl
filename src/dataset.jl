@@ -57,7 +57,7 @@ CDM.group(ds::ZarrDataset,name::SymbolOrString) = ZarrDataset(ds.zgroup.groups,S
 
 
 CDM.parentdataset(ds::ZarrDataset) = ds.parentdataset
-CDM.iswritable(ds::ZarrDataset) = true
+CDM.iswritable(ds::ZarrDataset) = false
 CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
 
 

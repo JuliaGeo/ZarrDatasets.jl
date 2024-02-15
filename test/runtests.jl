@@ -2,6 +2,7 @@ using Dates
 using NCDatasets
 using Test
 using ZarrDatasets
+using CommonDataModel: iswritable, attribnames, parentdataset
 
 @testset "ZarrDatasets.jl" begin
     #fname = "/tmp/foo.zarr"
@@ -43,6 +44,15 @@ using ZarrDatasets
     for (attribname,attribval) in ds.attrib
         @test ds2.attrib[attribname] == attribval
     end
+
+    io = IOBuffer()
+    show(io,ds)
+    str = String(take!(io))
+    @test occursin("title",str)
+
+    @test !iswritable(ds)
+    @test "title" in attribnames(ds)
+    @test isnothing(parentdataset(ds))
 
     close(ds)
     close(ds2)
