@@ -14,6 +14,8 @@ using ZarrDatasets
     ds = NCDataset(nczarr_name,"c")
     defVar(ds,"var",v,("lon","lat"),attrib = Dict(
         "foo" => "bar",
+        "int_attribute" => 1,
+        "float_attribute" => 1.,
         "scale_factor" => 1.23))
     ds.attrib["title"] = "test file"
     close(ds)

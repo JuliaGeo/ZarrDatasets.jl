@@ -73,13 +73,46 @@ currently supported. `ds` supports the API of the
 [JuliaGeo/CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl).
 The experimental `_omitcode` allows to work-around servers that return
 HTTP error different than 404 for missing chunks.
+
+Example:
+
+```julia
+using ZarrDatasets
+url = "https://s3.waw3-1.cloudferro.com/mdl-arco-time-035/arco/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-ssh-rean-d_202012/timeChunked.zarr"
+ds = ZarrDataset(url);
+# see the metadata
+display(ds)
+# load the variable time
+time = ds["time"][:]
+# load the the attribute long_name for the variable zos
+zos_long_name = ds["zos"].attrib["long_name"]
+# load the global attribute
+comment = ds.attrib["comment"]
+# query the dimension of the variable zos
+size(ds["zos"])
+close(ds)
+```
+
+Example with a `do`-block:
+
+```julia
+using ZarrDatasets
+url = "https://s3.waw3-1.cloudferro.com/mdl-arco-time-035/arco/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-ssh-rean-d_202012/timeChunked.zarr"
+
+zos1 = ZarrDataset(url) do ds
+  ds["zos"][:,:,end,1]
+end # implicit call to close(ds)
+```
+
 """
 function ZarrDataset(url::AbstractString,mode = "r";
                      parentdataset = nothing,
                      _omitcode = 404,
                      maskingvalue = missing)
     ds = Zarr.zopen(url,mode)
-    Zarr.missing_chunk_return_code!(ds.storage,_omitcode)
+    if ds.storage isa Zarr.HTTPStore
+        Zarr.missing_chunk_return_code!(ds.storage,_omitcode)
+    end
     ZarrDataset(ds,parentdataset,maskingvalue)
 end
 
