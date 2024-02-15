@@ -117,8 +117,8 @@ function ZarrDataset(url::AbstractString,mode = "r";
 end
 
 
-ZarrDataset(keys::AbstractArray{<:AbstractString,N}, args...; kwargs...) where N =
-    ZarrDataset(ZarrDataset,fnames, args...; kwargs...)
+ZarrDataset(fnames::AbstractArray{<:AbstractString,N}, args...; kwargs...) where N =
+    MFDataset(ZarrDataset,fnames, args...; kwargs...)
 
 
 function ZarrDataset(f::Function,args...; kwargs...)

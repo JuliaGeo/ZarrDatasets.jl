@@ -8,6 +8,7 @@ import Base:
 
 import CommonDataModel:
     CFVariable,
+    MFDataset,
     SymbolOrString,
     attrib,
     attribnames,
