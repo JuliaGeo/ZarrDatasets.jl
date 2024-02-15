@@ -5,7 +5,7 @@
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliageo.github.io/ZarrDatasets.jl/dev/)
 
 
-ZarrDatasets.jl is a julia package to read [Zarr](https://zarr.dev/) datasets using the native julia implementation [Zarr.jl](https://github.com/JuliaIO/Zarr.jl)
+ZarrDatasets.jl is a julia package to read [Zarr](https://zarr.dev/) datasets based on the native julia implementation [Zarr.jl](https://github.com/JuliaIO/Zarr.jl)
 using the [CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl) interface.
 
 In the following example, data from [Copernicus Marine Service](https://marine.copernicus.eu/) is loaded using `ZarrDatasets` and a subset
