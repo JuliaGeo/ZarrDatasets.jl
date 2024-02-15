@@ -46,7 +46,7 @@ ds_sub = @select(ds, time == DateTime(2001,1,1)
     && 7 <= longitude <= 11
     && 42.3 <= latitude <= 44.5)
 
-# save selection as NetCDF file
+# save selection as a NetCDF file
 NCDataset("$(dataset_id)_selection.nc","c") do ds_nc
     write(ds_nc,ds_sub)
 end

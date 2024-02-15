@@ -22,18 +22,18 @@ using CommonDataModel: iswritable, attribnames, parentdataset
     close(ds)
 
     ds = NCDataset(nczarr_name)
-    ds2 = ZarrDataset(fname)
+    dsz = ZarrDataset(fname)
 
-    @test Set(dimnames(ds2)) == Set(dimnames(ds))
+    @test Set(dimnames(dsz)) == Set(dimnames(ds))
 
     for (name,len) in ds.dim
-        @test ds2.dim[name] == len
+        @test dsz.dim[name] == len
     end
 
     for (varname,v) in ds
-        @test haskey(ds2,varname)
+        @test haskey(dsz,varname)
 
-        v2 = ds2[varname]
+        v2 = dsz[varname]
         @test Array(v2) == Array(v)
 
         for (attribname,attribval) in v.attrib
@@ -42,18 +42,23 @@ using CommonDataModel: iswritable, attribnames, parentdataset
     end
 
     for (attribname,attribval) in ds.attrib
-        @test ds2.attrib[attribname] == attribval
+        @test dsz.attrib[attribname] == attribval
     end
 
     io = IOBuffer()
-    show(io,ds)
+    show(io,dsz)
     str = String(take!(io))
     @test occursin("title",str)
 
-    @test !iswritable(ds)
-    @test "title" in attribnames(ds)
-    @test isnothing(parentdataset(ds))
+    @test !iswritable(dsz)
+    @test "title" in attribnames(dsz)
+    @test isnothing(parentdataset(dsz))
 
+    zvar = ZarrDataset(fname) do ds3
+        Array(ds3["var"])
+    end
+
+    @test zvar == Array(ds["var"])
     close(ds)
-    close(ds2)
+    close(dsz)
 end
