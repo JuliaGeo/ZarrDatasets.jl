@@ -1,11 +1,11 @@
+using CommonDataModel: iswritable, attribnames, parentdataset, load!, dataset
 using Dates
+using DiskArrays
 using NCDatasets
 using Test
 using ZarrDatasets
-using CommonDataModel: iswritable, attribnames, parentdataset
 
 @testset "ZarrDatasets.jl" begin
-    #fname = "/tmp/foo.zarr"
     fname = tempname()
     mkpath(fname)
 
@@ -58,7 +58,17 @@ using CommonDataModel: iswritable, attribnames, parentdataset
         Array(ds3["var"])
     end
 
+    @test DiskArrays.haschunks(dsz["var"]) == DiskArrays.Chunked()
+    @test length(DiskArrays.eachchunk(dsz["var"])) ≥ 1
     @test zvar == Array(ds["var"])
+
+    v = dsz["var"].var
+    buffer = zeros(eltype(v),size(v))
+    load!(v,buffer,:,:)
+
+    @test buffer == Array(ds["var"].var)
+
+    @test dataset(dsz["var"]) == dsz
     close(ds)
     close(dsz)
 end

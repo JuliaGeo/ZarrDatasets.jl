@@ -15,5 +15,7 @@ CDM.attrib(v::ZarrVariable,name::SymbolOrString) = v.zarray.attrs[String(name)]
 
 
 # DiskArray methods
+eachchunk(v::ZarrVariable) = eachchunk(v.zarray)
+haschunks(v::ZarrVariable) = haschunks(v.zarray)
 eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
 haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)

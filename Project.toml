@@ -6,13 +6,15 @@ version = "0.1.0"
 [deps]
 CommonDataModel = "1fbeeb36-5f17-413c-809b-666fb144f157"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+DiskArrays = "3c3547ce-8d99-4f5e-a174-61eb10b00ae3"
 Zarr = "0a941bbe-ad1d-11e8-39d9-ab76183a1d99"
 
 [compat]
-julia = "1"
 CommonDataModel = "0.3.4"
 DataStructures = "0.17, 0.18"
+DiskArrays = "0.3.22"
 Zarr = "0.9.2"
+julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

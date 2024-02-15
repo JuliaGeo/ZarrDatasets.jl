@@ -21,6 +21,10 @@ import CommonDataModel:
     parentdataset,
     variable
 
+import DiskArrays:
+    eachchunk,
+    haschunks
+
 import CommonDataModel as CDM
 using DataStructures
 using Zarr
