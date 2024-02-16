@@ -1,4 +1,9 @@
-using CommonDataModel: iswritable, attribnames, parentdataset, load!, dataset, MFDataset
+using CommonDataModel:
+    iswritable,
+    attribnames,
+    parentdataset,
+    load!,
+    dataset
 using Dates
 using DiskArrays
 using NCDatasets
@@ -12,6 +17,7 @@ v = randn(2,3,length(fnames))
 nczarr_names = ["file://" * fname * "#mode=zarr" for fname in fnames]
 
 for i = 1:length(fnames)
+    local ds
     mkpath(fnames[i])
     ds = NCDataset(nczarr_names[i],"c")
     defVar(ds,"var",v[:,:,i:i],("lon","lat","time"),attrib = Dict(
@@ -33,7 +39,7 @@ for (name,len) in ds.dim
 end
 
 for (varname,v) in ds
-#    @test haskey(dsz,varname)
+    @test haskey(dsz,varname)
 
     v2 = dsz[varname]
     @test Array(v2) == Array(v)
@@ -54,25 +60,21 @@ str = String(take!(io))
 
 @test !iswritable(dsz)
 @test "title" in attribnames(dsz)
-#@test isnothing(parentdataset(dsz))
 
-zvar = ZarrDataset(fname) do ds3
+@test isnothing(parentdataset(dsz))
+
+zvar = ZarrDataset(fnames,aggdim = "time") do ds3
     Array(ds3["var"])
 end
 
-#=
-
-#@test DiskArrays.haschunks(dsz["var"]) == DiskArrays.Chunked()
-@test length(DiskArrays.eachchunk(dsz["var"])) ≥ 1
 @test zvar == Array(ds["var"])
 
 v = dsz["var"].var
 buffer = zeros(eltype(v),size(v))
-load!(v,buffer,:,:)
+load!(v,buffer,:,:,:)
 
 @test buffer == Array(ds["var"].var)
 
 @test dataset(dsz["var"]) == dsz
 close(ds)
 close(dsz)
-=#
