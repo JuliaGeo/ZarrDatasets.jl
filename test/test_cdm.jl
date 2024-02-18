@@ -1,4 +1,9 @@
-using CommonDataModel: iswritable, attribnames, parentdataset, load!, dataset
+using CommonDataModel:
+    attribnames,
+    dataset,
+    iswritable,
+    load!,
+    parentdataset
 using Dates
 using DiskArrays
 using NCDatasets

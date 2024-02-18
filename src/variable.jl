@@ -10,8 +10,32 @@ CDM.name(v::ZarrVariable) = Zarr.zname(v.zarray)
 CDM.dimnames(v::ZarrVariable) = Tuple(reverse(v.zarray.attrs["_ARRAY_DIMENSIONS"]))
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
-CDM.attribnames(v::ZarrVariable) = filter(!=("_ARRAY_DIMENSIONS"),keys(v.zarray.attrs))
-CDM.attrib(v::ZarrVariable,name::SymbolOrString) = v.zarray.attrs[String(name)]
+function CDM.attribnames(v::ZarrVariable)
+    names = filter(!=("_ARRAY_DIMENSIONS"),keys(v.zarray.attrs))
+    if !isnothing(v.zarray.metadata.fill_value)
+        push!(names,"_FillValue")
+    end
+    return names
+end
+
+function CDM.attrib(v::ZarrVariable,name::SymbolOrString)
+    if String(name) == "_FillValue" && !isnothing(v.zarray.metadata.fill_value)
+        return v.zarray.metadata.fill_value
+    end
+    return v.zarray.attrs[String(name)]
+end
+
+function CDM.defAttrib(v::ZarrVariable,name::SymbolOrString,value)
+    @assert iswritable(dataset(v))
+    @assert String(name) !== "_FillValue"
+
+    v.zarray.attrs[String(name)] = value
+
+    storage = v.zarray.storage
+    io = IOBuffer()
+    JSON.print(io, v.zarray.attrs)
+    storage[v.zarray.path,".zattrs"] = take!(io)
+end
 
 
 # DiskArray methods
@@ -19,3 +43,28 @@ eachchunk(v::ZarrVariable) = eachchunk(v.zarray)
 haschunks(v::ZarrVariable) = haschunks(v.zarray)
 eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
 haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
+
+
+function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensionnames; chunksizes=nothing, attrib = Dict(), kwargs...)
+    @assert iswritable(ds)
+
+    _attrib = Dict(attrib)
+    _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
+
+    _size = ntuple(length(dimensionnames)) do i
+        ds.dimensions[Symbol(dimensionnames[i])]
+    end
+
+    if isnothing(chunksizes)
+        chunksizes = _size
+    end
+    zarray = zcreate(
+        vtype, ds.zgroup, name, _size...;
+        chunks = chunksizes,
+        attrs = _attrib,
+        kwargs...
+    )
+
+    return ZarrVariable{vtype,ndims(zarray),typeof(zarray),typeof(ds)}(
+        zarray,ds)
+end

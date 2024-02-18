@@ -7,5 +7,7 @@ end
 struct ZarrDataset{TZ,TP,Tmaskingvalue} <: CDM.AbstractDataset
     zgroup::TZ
     parentdataset::TP
+    dimensions::OrderedDict{Symbol,Int}
+    iswritable::Bool
     maskingvalue::Tmaskingvalue
 end

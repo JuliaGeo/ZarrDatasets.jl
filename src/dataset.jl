@@ -8,13 +8,7 @@ function CDM.variable(ds::ZarrDataset,varname::SymbolOrString)
     ZarrVariable{eltype(zarray),ndims(zarray),typeof(zarray),typeof(ds)}(zarray,ds)
 end
 
-CDM.dimnames(ds::ZarrDataset) = Tuple(
-    sort(
-        unique(
-            reduce(vcat,
-                   (collect(dimnames(variable(ds,vn))) for vn in keys(ds)),
-                   init = String[]
-                   ))))
+CDM.dimnames(ds::ZarrDataset) = Tuple(String.(keys(ds.dimensions)))
 
 # function CDM.unlimited(ds::ZarrDataset)
 #     ul = ds.unlimited
@@ -33,17 +27,12 @@ CDM.dimnames(ds::ZarrDataset) = Tuple(
 #     return nothing
 # end
 
-function CDM.dim(ds::ZarrDataset,dimname::SymbolOrString)
+CDM.dim(ds::ZarrDataset,dimname::SymbolOrString) = ds.dimensions[Symbol(dimname)]
 
-    for vn in keys(ds)
-        v = variable(ds,vn)
-        dn = dimnames(v)
-        i = findfirst(==(dimname),dn)
-        if !isnothing(i)
-            return size(v,i)
-        end
-    end
-    error("dimension $dimname not found")
+function CDM.defDim(ds::ZarrDataset,dimname::SymbolOrString,dimlen)
+    dn = Symbol(dimname)
+    @assert !haskey(ds.dimensions,dn)
+    ds.dimensions[dn] = dimlen
 end
 
 CDM.varnames(ds::ZarrDataset) = keys(ds.zgroup.arrays)
@@ -51,13 +40,22 @@ CDM.varnames(ds::ZarrDataset) = keys(ds.zgroup.arrays)
 CDM.attribnames(ds::ZarrDataset) = keys(ds.zgroup.attrs)
 CDM.attrib(ds::ZarrDataset,name::SymbolOrString) = ds.zgroup.attrs[String(name)]
 
+function CDM.defAttrib(ds::ZarrDataset,name::SymbolOrString,value)
+    @assert iswritable(ds)
+    ds.zgroup.attrs[String(name)] = value
+
+    storage = ds.zgroup.storage
+    io = IOBuffer()
+    JSON.print(io, ds.zgroup.attrs)
+    storage[ds.zgroup.path,".zattrs"] = take!(io)
+end
 
 CDM.groupnames(ds::ZarrDataset) = keys(ds.zgroup.groups)
 CDM.group(ds::ZarrDataset,name::SymbolOrString) = ZarrDataset(ds.zgroup.groups,String(name),ds)
 
 
 CDM.parentdataset(ds::ZarrDataset) = ds.parentdataset
-CDM.iswritable(ds::ZarrDataset) = false
+CDM.iswritable(ds::ZarrDataset) = ds.iswritable
 CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
 
 
@@ -108,12 +106,38 @@ end # implicit call to close(ds)
 function ZarrDataset(url::AbstractString,mode = "r";
                      parentdataset = nothing,
                      _omitcode = 404,
-                     maskingvalue = missing)
-    ds = Zarr.zopen(url,mode)
-    if ds.storage isa Zarr.HTTPStore
-        Zarr.missing_chunk_return_code!(ds.storage,_omitcode)
+                     maskingvalue = missing,
+                     attrib = Dict(),
+                     )
+
+    dimensions = OrderedDict{Symbol,Int}()
+    iswritable = false
+
+    if mode == "r"
+        zg = Zarr.zopen(url,mode)
+        if (zg.storage isa Zarr.HTTPStore) ||
+            (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
+            @debug "omit chunks on HTTP error" _omitcode
+            Zarr.missing_chunk_return_code!(zg.storage,_omitcode)
+        end
+
+        for (varname,zarray) in zg.arrays
+            for (dimname,dimlen) in zip(reverse(zarray.attrs["_ARRAY_DIMENSIONS"]),size(zarray))
+
+                dn = Symbol(dimname)
+                if haskey(dimensions,dn)
+                    @assert dimensions[dn] == dimlen
+                else
+                    dimensions[dn] = dimlen
+                end
+            end
+        end
+    elseif mode == "c"
+        store = Zarr.DirectoryStore(url)
+        zg = zgroup(store, "",attrs = Dict(attrib))
+        iswritable = true
     end
-    ZarrDataset(ds,parentdataset,maskingvalue)
+    ZarrDataset(zg,parentdataset,dimensions,iswritable,maskingvalue)
 end
 
 

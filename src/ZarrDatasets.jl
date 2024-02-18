@@ -13,6 +13,9 @@ import CommonDataModel:
     attrib,
     attribnames,
     dataset,
+    defAttrib,
+    defVar,
+    defDim,
     dim,
     dimnames,
     iswritable,
@@ -29,6 +32,7 @@ import DiskArrays:
 import CommonDataModel as CDM
 using DataStructures
 using Zarr
+import JSON
 
 include("types.jl")
 include("dataset.jl")
