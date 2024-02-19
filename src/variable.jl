@@ -18,9 +18,9 @@ function CDM.attribnames(v::ZarrVariable)
     return names
 end
 
-function CDM.attrib(v::ZarrVariable,name::SymbolOrString)
+function CDM.attrib(v::ZarrVariable{T},name::SymbolOrString) where T
     if String(name) == "_FillValue" && !isnothing(v.zarray.metadata.fill_value)
-        return v.zarray.metadata.fill_value
+        return T(v.zarray.metadata.fill_value)
     end
     return v.zarray.attrs[String(name)]
 end
