@@ -3,7 +3,6 @@ using ZarrDatasets:
     defDim,
     defVar,
     defAttrib
-using Zarr
 using DataStructures
 
 data = rand(Int32,3,5)
