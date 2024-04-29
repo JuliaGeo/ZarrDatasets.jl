@@ -61,16 +61,16 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
 
 """
     ds = ZarrDataset(url::AbstractString,mode = "r";
-                     _omitcode = 404,
+                     _omitcode = [404,403],
                      maskingvalue = missing)
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 
-Open the zarr dataset at the url or path `url`. Only the read-mode is
-currently supported. `ds` supports the API of the
+Open the zarr dataset at the url or path `url`. The mode can only be "r" (read-only)
+or "c" (create). `ds` supports the API of the
 [JuliaGeo/CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl).
 The experimental `_omitcode` allows to work-around servers that return
-HTTP error different than 404 for missing chunks.
+a HTTP error different than 404 for missing chunks.
 
 Example:
 
@@ -105,7 +105,7 @@ end # implicit call to close(ds)
 """
 function ZarrDataset(url::AbstractString,mode = "r";
                      parentdataset = nothing,
-                     _omitcode = 404,
+                     _omitcode = [404,403],
                      maskingvalue = missing,
                      attrib = Dict(),
                      )
