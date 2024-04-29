@@ -1,8 +1,8 @@
 
-Base.getindex(v::ZarrVariable,ij...) = v.zarray[ij...]
+Base.getindex(v::ZarrVariable,ij::Union{Integer,Colon,AbstractVector{<:Integer}}...) = v.zarray[ij...]
 CDM.load!(v::ZarrVariable,buffer,ij...) = buffer .= view(v.zarray,ij...)
 
-function Base.setindex!(v::ZarrVariable,data,ij...)
+function Base.setindex!(v::ZarrVariable,data,ij::Union{Integer,Colon,AbstractVector{<:Integer}}...)
     v.zarray[ij...] = data
 end
 Base.size(v::ZarrVariable) = size(v.zarray)

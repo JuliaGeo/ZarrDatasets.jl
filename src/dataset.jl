@@ -137,7 +137,7 @@ function ZarrDataset(url::AbstractString,mode = "r";
         zg = zgroup(store, "",attrs = Dict(attrib))
         iswritable = true
     end
-    ZarrDataset(zg,parentdataset,dimensions,iswritable,maskingvalue)
+    ZarrDataset(parentdataset,zg,dimensions,iswritable,maskingvalue)
 end
 
 
