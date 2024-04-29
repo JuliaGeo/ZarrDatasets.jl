@@ -1,12 +1,12 @@
 
-struct ZarrVariable{T,N,TZA,TZG} <: CDM.AbstractVariable{T,N} where TZA  <: AbstractArray{T,N}
+struct ZarrVariable{T,N,TZA <: AbstractArray{T,N},TZG} <: CDM.AbstractVariable{T,N}
     zarray::TZA
     parentdataset::TZG
 end
 
-struct ZarrDataset{TZ,TP,Tmaskingvalue} <: CDM.AbstractDataset
+struct ZarrDataset{TDS <: Union{CDM.AbstractDataset,Nothing},Tmaskingvalue,TZ} <: CDM.AbstractDataset
+    parentdataset::TDS
     zgroup::TZ
-    parentdataset::TP
     dimensions::OrderedDict{Symbol,Int}
     iswritable::Bool
     maskingvalue::Tmaskingvalue
