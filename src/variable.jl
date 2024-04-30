@@ -58,6 +58,7 @@ function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensi
     if isnothing(chunksizes)
         chunksizes = _size
     end
+
     zarray = zcreate(
         vtype, ds.zgroup, name, _size...;
         chunks = chunksizes,
