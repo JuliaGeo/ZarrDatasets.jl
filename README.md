@@ -24,7 +24,7 @@ function copernicus_marine_catalog(product_id,dataset_id,
     stac_url = "https://stac.marine.copernicus.eu/metadata/catalog.stac.json",
     asset = "timeChunked")
 
-    cat  = STAC.Catalog(stac_url);
+    cat = STAC.Catalog(stac_url);
     item_canditates = filter(startswith(dataset_id),keys(cat[product_id].items))
     # use last version per default
     dataset_version_id = sort(item_canditates)[end]
@@ -36,9 +36,7 @@ product_id = "MEDSEA_MULTIYEAR_PHY_006_004"
 dataset_id = "med-cmcc-ssh-rean-d"
 
 url = copernicus_marine_catalog(product_id,dataset_id)
-# surprisingly requesting missing data chunks results in the HTTP error
-# code 403 (permission denied) rather than 404 (not found) for the CMEMS server.
-ds = ZarrDataset(url,_omitcode=[404,403]);
+ds = ZarrDataset(url);
 
 # longitude, latitude and time are the coordinate variables defined in the
 # zarr dataset
