@@ -134,7 +134,7 @@ function ZarrDataset(url::AbstractString,mode = "r";
         end
     elseif mode == "c"
         store = Zarr.DirectoryStore(url)
-        zg = zgroup(store, "",attrs = Dict(attrib))
+        zg = zgroup(store, "",attrs = Dict{String,Any}(attrib))
         iswritable = true
     end
     ZarrDataset(parentdataset,zg,dimensions,iswritable,maskingvalue)
