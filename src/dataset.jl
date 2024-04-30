@@ -153,3 +153,8 @@ function ZarrDataset(f::Function,args...; kwargs...)
         close(ds)
     end
 end
+
+export ZarrDataset
+export defDim
+export defVar
+#export defGroup
