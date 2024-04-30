@@ -14,7 +14,7 @@ using ZarrDatasets
 # sample data
 data = [i+j for i = 1:3, j = 1:5]
 
-directoryname = "/tmp/test-zarr4"
+directoryname = "/tmp/test-zarr"
 mkdir(directoryname)
 
 ds = ZarrDataset(directoryname,"c")
@@ -32,7 +32,7 @@ The data and units can be loaded by indexing the data set structure `ds`.
 
 ```julia
 using ZarrDatasets
-directoryname = "/tmp/test-zarr4"
+directoryname = "/tmp/test-zarr"
 ds = ZarrDataset(directoryname)
 data = ds["varname"][:,:]
 data_units = ds["varname"].attrib["units"]
