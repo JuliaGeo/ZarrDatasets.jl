@@ -52,7 +52,7 @@ function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensi
         fillvalue = get(attrib,"_FillValue",nothing)
     end
 
-    _attrib = Dict(attrib)
+    _attrib = Dict{String,Any}(attrib)
     _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
 
     _size = ntuple(length(dimensionnames)) do i
@@ -62,6 +62,7 @@ function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensi
     if isnothing(chunksizes)
         chunksizes = _size
     end
+
     zarray = zcreate(
         vtype, ds.zgroup, name, _size...;
         chunks = chunksizes,

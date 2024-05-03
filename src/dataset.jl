@@ -61,16 +61,21 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
 
 """
     ds = ZarrDataset(url::AbstractString,mode = "r";
-                     _omitcode = 404,
+                     _omitcode = [404,403],
                      maskingvalue = missing)
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 
-Open the zarr dataset at the url or path `url`. Only the read-mode is
-currently supported. `ds` supports the API of the
+Open the zarr dataset at the url or path `url`. The mode can only be `"r"` (read-only)
+or `"c"` (create). `ds` supports the API of the
 [JuliaGeo/CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl).
-The experimental `_omitcode` allows to work-around servers that return
-HTTP error different than 404 for missing chunks.
+The experimental `_omitcode` allows to define which HTTP error code should be used
+for missing chunks. For compatibility with python's Zarr, the HTTP error 403
+(permission denied) is also used to missing chunks in addition to 404 (not
+found).
+
+The parameter `maskingvalue` allows to define which special value should be used
+as replacement for fill values. The default is `missing`.
 
 Example:
 
@@ -101,11 +106,10 @@ zos1 = ZarrDataset(url) do ds
   ds["zos"][:,:,end,1]
 end # implicit call to close(ds)
 ```
-
 """
 function ZarrDataset(url::AbstractString,mode = "r";
                      parentdataset = nothing,
-                     _omitcode = 404,
+                     _omitcode = [404,403],
                      maskingvalue = missing,
                      attrib = Dict(),
                      )
@@ -134,7 +138,7 @@ function ZarrDataset(url::AbstractString,mode = "r";
         end
     elseif mode == "c"
         store = Zarr.DirectoryStore(url)
-        zg = zgroup(store, "",attrs = Dict(attrib))
+        zg = zgroup(store, "",attrs = Dict{String,Any}(attrib))
         iswritable = true
     end
     ZarrDataset(parentdataset,zg,dimensions,iswritable,maskingvalue)
@@ -153,3 +157,8 @@ function ZarrDataset(f::Function,args...; kwargs...)
         close(ds)
     end
 end
+
+export ZarrDataset
+export defDim
+export defVar
+#export defGroup
