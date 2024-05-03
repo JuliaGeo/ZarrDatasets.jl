@@ -44,3 +44,17 @@ io = IOBuffer()
 show(io,ds)
 str = String(take!(io))
 @test occursin("Global",str)
+
+
+# fill value
+
+fname = tempname()
+ds = ZarrDataset(fname,"c")
+defDim(ds,"lon",100)
+v = defVar(ds,"lon",Float32,("lon",),fillvalue = 9999.)
+v .= 1
+close(ds)
+
+ds = ZarrDataset(fname)
+@test eltype(ds["lon"]) ==  Union{Missing, Float32}
+@test eltype(cfvariable(ds,"lon",fillvalue=nothing)) == Float32
