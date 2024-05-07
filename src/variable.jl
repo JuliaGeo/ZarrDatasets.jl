@@ -10,9 +10,17 @@ CDM.name(v::ZarrVariable) = Zarr.zname(v.zarray)
 CDM.dimnames(v::ZarrVariable) = Tuple(reverse(v.zarray.attrs["_ARRAY_DIMENSIONS"]))
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
+function _iscoordvar(v)
+    dn = dimnames(v)
+    if length(dn) == 0
+        return false
+    end
+    return name(v) == first(dn)
+end
+
 function CDM.attribnames(v::ZarrVariable)
     names = filter(!=("_ARRAY_DIMENSIONS"),keys(v.zarray.attrs))
-    if !isnothing(v.zarray.metadata.fill_value)
+    if !isnothing(v.zarray.metadata.fill_value) && !_iscoordvar(v)
         push!(names,"_FillValue")
     end
     return names
@@ -44,6 +52,17 @@ haschunks(v::ZarrVariable) = haschunks(v.zarray)
 eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
 haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 
+"""
+
+    defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensionnames; chunksizes=nothing, attrib = Dict(), fillvalue = nothing)
+
+
+Create a variable `name` in the dataset `ds` with the type `vtype` and the dimension `dimensionnames`.
+
+For coordinate variables, fill values will be used a background value of undefined chunks and not as missing value as coordinate variables cannot have the `_FillValues` in the CF convension as in Zarr v2 format a `fill_value` does not necessarily indicate a missing value.
+
+See also `CommonDataModel.defVar` for more information.
+"""
 function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensionnames; chunksizes=nothing, attrib = Dict(), fillvalue = nothing, kwargs...)
     @assert iswritable(ds)
 
@@ -70,6 +89,8 @@ function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensi
         kwargs...
     )
 
-    return ZarrVariable{vtype,ndims(zarray),typeof(zarray),typeof(ds)}(
+    zv = ZarrVariable{vtype,ndims(zarray),typeof(zarray),typeof(ds)}(
         zarray,ds)
+
+    return ds[name]
 end
