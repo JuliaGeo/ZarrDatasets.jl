@@ -5,5 +5,6 @@ using ZarrDatasets
     include("test_cdm.jl")
     include("test_multifile.jl")
     include("test_write.jl")
+    include("test_groups.jl")
     include("test_aqua.jl")
 end

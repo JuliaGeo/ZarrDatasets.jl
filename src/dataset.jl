@@ -18,14 +18,19 @@ CDM.dimnames(ds::ZarrDataset) = Tuple(String.(keys(ds.dimensions)))
 #     return ul
 # end
 
-# function _dim(ds::ZarrDataset,dimname::SymbolOrString)
-#     if haskey(ds.dimensions,name)
-#         return ds.dimensions[name]
-#     elseif ds.parentdataset !== nothing
-#         return _dim(ds.parentdataset,name)
-#     end
-#     return nothing
-# end
+function _dim(ds::ZarrDataset,dimname::SymbolOrString)
+    dimlen = get(ds.dimensions,Symbol(dimname),nothing)
+
+    if !isnothing(dimlen)
+        return dimlen
+    end
+
+    if ds.parentdataset !== nothing
+        return _dim(ds.parentdataset,dimname)
+    end
+
+    error("dimension $dimname is not defined")
+end
 
 CDM.dim(ds::ZarrDataset,dimname::SymbolOrString) = ds.dimensions[Symbol(dimname)]
 
@@ -50,8 +55,23 @@ function CDM.defAttrib(ds::ZarrDataset,name::SymbolOrString,value)
     storage[ds.zgroup.path,".zattrs"] = take!(io)
 end
 
+# groups
+
+function CDM.defGroup(ds::ZarrDataset,groupname::SymbolOrString; attrib = Dict())
+    _attrib = Dict{String,Any}(attrib)
+    zg = zgroup(ds.zgroup,String(groupname),attrs = _attrib)
+    dimensions = OrderedDict{Symbol,Int}()
+    return ZarrDataset(ds,zg,dimensions,ds.iswritable,ds.maskingvalue)
+end
+
 CDM.groupnames(ds::ZarrDataset) = keys(ds.zgroup.groups)
-CDM.group(ds::ZarrDataset,name::SymbolOrString) = ZarrDataset(ds.zgroup.groups,String(name),ds)
+
+function CDM.group(ds::ZarrDataset,groupname::SymbolOrString)
+    dimensions = OrderedDict{Symbol,Int}()
+    zg = ds.zgroup.groups[String(groupname)]
+    return ZarrDataset(ds,zg,dimensions,ds.iswritable,ds.maskingvalue)
+end
+
 
 
 CDM.parentdataset(ds::ZarrDataset) = ds.parentdataset
@@ -161,4 +181,4 @@ end
 export ZarrDataset
 export defDim
 export defVar
-#export defGroup
+export defGroup

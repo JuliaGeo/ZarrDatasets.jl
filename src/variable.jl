@@ -44,7 +44,6 @@ haschunks(v::ZarrVariable) = haschunks(v.zarray)
 eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
 haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 
-
 function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensionnames; chunksizes=nothing, attrib = Dict(), fillvalue = nothing, kwargs...)
     @assert iswritable(ds)
 
@@ -56,7 +55,7 @@ function CDM.defVar(ds::ZarrDataset,name::SymbolOrString,vtype::DataType,dimensi
     _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
 
     _size = ntuple(length(dimensionnames)) do i
-        ds.dimensions[Symbol(dimensionnames[i])]
+        _dim(ds,dimensionnames[i])
     end
 
     if isnothing(chunksizes)

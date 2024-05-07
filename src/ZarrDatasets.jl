@@ -16,6 +16,7 @@ import CommonDataModel:
     defAttrib,
     defVar,
     defDim,
+    defGroup,
     dim,
     dimnames,
     iswritable,
