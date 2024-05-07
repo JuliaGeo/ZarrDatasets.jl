@@ -58,5 +58,5 @@ v .= 1
 close(ds)
 
 ds = ZarrDataset(fname)
-@test eltype(ds["lon"]) ==  Union{Missing, Float32}
+@test eltype(ds["lon"]) == Float32
 @test eltype(cfvariable(ds,"lon",fillvalue=nothing)) == Float32
