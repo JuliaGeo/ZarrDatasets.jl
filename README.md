@@ -1,7 +1,7 @@
 # ZarrDatasets
 
 [![Build Status](https://github.com/JuliaGeo/ZarrDatasets.jl/workflows/CI/badge.svg)](https://github.com/JuliaGeo/ZarrDatasets.jl/actions)
-[![codecov.io](http://codecov.io/github/JuliaGeo/ZarrDatasets.jl/coverage.svg?branch=main)](http://app.codecov.io/github/JuliaGeo/ZarrDatasets.jl?branch=main)
+[![codecov](https://codecov.io/github/JuliaGeo/ZarrDatasets.jl/graph/badge.svg?token=WuKAW6lYXn)](https://codecov.io/github/JuliaGeo/ZarrDatasets.jl)
 [![documentation dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliageo.github.io/ZarrDatasets.jl/dev/)
 
 
