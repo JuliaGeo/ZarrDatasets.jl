@@ -135,33 +135,54 @@ function ZarrDataset(url::AbstractString,mode = "r";
                      )
 
     dimensions = OrderedDict{Symbol,Int}()
-    iswritable = false
 
-    if mode == "r"
+    zg = if mode == "r"
         zg = Zarr.zopen(url,mode)
-        if (zg.storage isa Zarr.HTTPStore) ||
-            (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
+    elseif mode == "c"
+        store = Zarr.DirectoryStore(url)
+        zg = zgroup(store, "",attrs = Dict{String,Any}(attrib))
+    end
+    ZarrDataset(zg; mode, parentdataset, _omitcode, maskingvalue, attrib)
+end
+
+function ZarrDataset(store::Zarr.AbstractStore,mode = "r";
+                     parentdataset = nothing,
+                     _omitcode = [404,403],
+                     maskingvalue = missing,
+                     attrib = Dict(),
+                     )
+    return ZarrDataset(zopen(store, mode); mode, parentdataset, _omitcode, maskingvalue, attrib)
+end
+
+function ZarrDataset(zg::Zarr.ZGroup;
+                     mode = "r",
+                     parentdataset = nothing,
+                     _omitcode = [404,403],
+                     maskingvalue = missing,
+                     attrib = Dict(),
+                     )
+
+    dimensions = ZarrDatasets.OrderedDict{Symbol,Int}()
+    iswritable = false
+    if (zg.storage isa Zarr.HTTPStore) ||
+        (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
             @debug "omit chunks on HTTP error" _omitcode
             Zarr.missing_chunk_return_code!(zg.storage,_omitcode)
         end
 
         for (varname,zarray) in zg.arrays
             for (dimname,dimlen) in zip(reverse(zarray.attrs["_ARRAY_DIMENSIONS"]),size(zarray))
-
                 dn = Symbol(dimname)
                 if haskey(dimensions,dn)
                     @assert dimensions[dn] == dimlen
                 else
                     dimensions[dn] = dimlen
                 end
-            end
         end
-    elseif mode == "c"
-        store = Zarr.DirectoryStore(url)
-        zg = zgroup(store, "",attrs = Dict{String,Any}(attrib))
-        iswritable = true
     end
-    ZarrDataset(parentdataset,zg,dimensions,iswritable,maskingvalue)
+
+    return ZarrDataset(parentdataset, zg, dimensions, mode == "r" ? false : zg.writeable, maskingvalue)
+
 end
 
 
