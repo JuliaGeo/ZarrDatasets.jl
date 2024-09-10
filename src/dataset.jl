@@ -83,6 +83,7 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
     ds = ZarrDataset(url::AbstractString,mode = "r";
                      _omitcode = [404,403],
                      maskingvalue = missing)
+    ZarrDataset(zg::Zarr.ZGroup; _omitcode, maskingvalue)
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 

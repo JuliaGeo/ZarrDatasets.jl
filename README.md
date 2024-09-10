@@ -49,3 +49,14 @@ NCDataset("$(dataset_id)_selection.nc","c") do ds_nc
     write(ds_nc,ds_sub)
 end
 ```
+
+## Using a pre-existing Zarr array or store
+
+It's also simple to wrap an existing Zarr array, or a manually constructed Zarr store, in a `ZarrDataset`:
+
+```julia
+zg = zopen("/path/to/zarr")
+zd = ZarrDataset(zg)
+```
+
+and you can pass a constructed `Zarr.AbstractStore` similarly.
