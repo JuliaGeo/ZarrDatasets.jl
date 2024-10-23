@@ -25,7 +25,7 @@ function copernicus_marine_catalog(product_id,dataset_id,
     asset = "timeChunked")
 
     cat = STAC.Catalog(stac_url);
-    item_canditates = filter(startswith(dataset_id),keys(cat[product_id].items))
+    item_canditates = filter(startswith(dataset_id),collect(keys(cat[product_id].items)))
     # use last version per default
     dataset_version_id = sort(item_canditates)[end]
     item = cat[product_id].items[dataset_version_id]
