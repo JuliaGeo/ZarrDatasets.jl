@@ -31,13 +31,16 @@ import DiskArrays:
     haschunks
 
 import CommonDataModel as CDM
+import JSON
+
 using DataStructures
 using Zarr
-import JSON
+
+export ZarrDataset
+export defDim, defVar, defGroup
 
 include("types.jl")
 include("dataset.jl")
 include("variable.jl")
 
-export ZarrDataset
 end

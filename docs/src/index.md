@@ -1,6 +1,4 @@
-
 ## ZarrDatasets
-
 
 See the [documentation of JuliaGeo/CommonDataModel.jl](https://juliageo.org/CommonDataModel.jl/stable/) for the full documentation of the API. As a quick reference, here is an example how to create and read a Zarr file store as a quick reference.
 
@@ -39,14 +37,9 @@ data_units = ds["varname"].attrib["units"]
 ```
 
 
-
 ```@autodocs
 Modules = [ZarrDatasets]
 ```
-
-
-
-
 
 ### Differences between Zarr and NetCDF files
 
