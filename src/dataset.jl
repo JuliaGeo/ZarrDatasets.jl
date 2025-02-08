@@ -193,7 +193,7 @@ ZarrDataset(fnames::AbstractArray{<:AbstractString,N}, args...; kwargs...) where
     MFDataset(ZarrDataset,fnames, args...; kwargs...)
 
 
-function ZarrDataset(f::Functiot,args...; kwargs...)
+function ZarrDataset(f::Function,args...; kwargs...)
     ds = ZarrDataset(args...; kwargs...)
     try
         f(ds)
