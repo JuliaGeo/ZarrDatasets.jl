@@ -87,8 +87,8 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 
-Open the zarr dataset at the url or path `url`. The mode can only be `"r"` (read-only)
-or `"c"` (create). `ds` supports the API of the
+Open the zarr dataset at the url or path `url`. The mode can be `"r"` (read-only),
+`"w"` (write), or `"c"` (create). `ds` supports the API of the
 [JuliaGeo/CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl).
 The experimental `_omitcode` allows to define which HTTP error code should be used
 for missing chunks. For compatibility with python's Zarr, the HTTP error 403
@@ -128,7 +128,7 @@ zos1 = ZarrDataset(url) do ds
 end # implicit call to close(ds)
 ```
 """
-function ZarrDataset(url::AbstractString,mode = "r";
+function ZarrDataset(url::AbstractString, mode = "r";
                      parentdataset = nothing,
                      _omitcode = [404,403],
                      maskingvalue = missing,
@@ -137,16 +137,18 @@ function ZarrDataset(url::AbstractString,mode = "r";
 
     dimensions = OrderedDict{Symbol,Int}()
 
-    zg = if mode == "r"
-        zg = Zarr.zopen(url,mode)
+    zg = if mode in ("w", "r")
+        zg = Zarr.zopen(url, mode)
     elseif mode == "c"
         store = Zarr.DirectoryStore(url)
-        zg = zgroup(store, "",attrs = Dict{String,Any}(attrib))
+        zg = zgroup(store, "", attrs = Dict{String,Any}(attrib))
+    else
+        throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
     ZarrDataset(zg; mode, parentdataset, _omitcode, maskingvalue, attrib)
 end
 
-function ZarrDataset(store::Zarr.AbstractStore,mode = "r";
+function ZarrDataset(store::Zarr.AbstractStore, mode = "r";
                      parentdataset = nothing,
                      _omitcode = [404,403],
                      maskingvalue = missing,
@@ -191,7 +193,7 @@ ZarrDataset(fnames::AbstractArray{<:AbstractString,N}, args...; kwargs...) where
     MFDataset(ZarrDataset,fnames, args...; kwargs...)
 
 
-function ZarrDataset(f::Function,args...; kwargs...)
+function ZarrDataset(f::Functiot,args...; kwargs...)
     ds = ZarrDataset(args...; kwargs...)
     try
         f(ds)
