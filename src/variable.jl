@@ -4,7 +4,7 @@ function Base.setindex!(v::ZarrVariable,data,ij::Union{Integer,Colon,AbstractVec
     parent(v)[ij...] = data
 end
 Base.size(v::ZarrVariable) = size(parent(v))
-Base.parent(v::ZarrVariable) = parent(v)
+Base.parent(v::ZarrVariable) = v.zarray
 
 
 CDM.load!(v::ZarrVariable,buffer,ij...) = buffer .= view(parent(v),ij...)
