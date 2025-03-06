@@ -51,8 +51,8 @@ end
 # DiskArray methods
 eachchunk(v::ZarrVariable) = eachchunk(parent(v))
 haschunks(v::ZarrVariable) = haschunks(parent(v))
-eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(parent(v))
-haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(parent(v))
+eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
+haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 
 """
 
