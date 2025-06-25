@@ -2,8 +2,6 @@ module ZarrDatasets
 
 import Base:
     checkbounds,
-    getindex,
-    setindex!,
     size
 
 import CommonDataModel:
@@ -28,7 +26,9 @@ import CommonDataModel:
 
 import DiskArrays:
     eachchunk,
-    haschunks
+    haschunks,
+    readblock!,
+    writeblock!
 
 import CommonDataModel as CDM
 using DataStructures
