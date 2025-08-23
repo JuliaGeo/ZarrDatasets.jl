@@ -1,63 +1,52 @@
-# Base interface
 
-Base.getindex(v::ZarrVariable, I::Union{Integer,Colon,AbstractVector{<:Integer}}...) =
-    v.zarray[I...]
-function Base.setindex!(
-    v::ZarrVariable, data, I::Union{Integer,Colon,AbstractVector{<:Integer}}...
-)
-    v.zarray[I...] = data
+Base.getindex(v::ZarrVariable,ij::Union{Integer,Colon,AbstractVector{<:Integer}}...) = parent(v)[ij...]
+function Base.setindex!(v::ZarrVariable,data,ij::Union{Integer,Colon,AbstractVector{<:Integer}}...)
+    parent(v)[ij...] = data
 end
-Base.size(v::ZarrVariable) = size(v.zarray)
+Base.size(v::ZarrVariable) = size(parent(v))
+Base.parent(v::ZarrVariable) = v.zarray
 
-# DiskArrays.jl interface
 
-# TODO make ZarrVariable a real disk array
-eachchunk(v::ZarrVariable) = eachchunk(v.zarray)
-haschunks(v::ZarrVariable) = haschunks(v.zarray)
-eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
-haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
+CDM.load!(v::ZarrVariable,buffer,ij...) = buffer .= view(parent(v),ij...)
+CDM.name(v::ZarrVariable) = Zarr.zname(parent(v))
+CDM.dimnames(v::ZarrVariable) = Tuple(reverse(parent(v).attrs["_ARRAY_DIMENSIONS"]))
 
-# CommonDataModel.jl interface
-
-CDM.load!(v::ZarrVariable, buffer, ij...) = buffer .= view(v.zarray, ij...)
-CDM.name(v::ZarrVariable) = Zarr.zname(v.zarray)
-CDM.dimnames(v::ZarrVariable) = Tuple(reverse(v.zarray.attrs["_ARRAY_DIMENSIONS"]))
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
 function CDM.attribnames(v::ZarrVariable)
-    names = filter(!=("_ARRAY_DIMENSIONS"), keys(v.zarray.attrs))
-    if !isnothing(v.zarray.metadata.fill_value) && !_iscoordvar(v)
-        push!(names, "_FillValue")
+    names = filter(!=("_ARRAY_DIMENSIONS"),keys(parent(v).attrs))
+    if !isnothing(parent(v).metadata.fill_value) && !_iscoordvar(v)
+        push!(names,"_FillValue")
     end
     return names
 end
 
-function CDM.attrib(v::ZarrVariable{T}, name::SymbolOrString) where {T}
-    if String(name) == "_FillValue" && !isnothing(v.zarray.metadata.fill_value)
-        return T(v.zarray.metadata.fill_value)
+function CDM.attrib(v::ZarrVariable{T},name::SymbolOrString) where T
+    if String(name) == "_FillValue" && !isnothing(parent(v).metadata.fill_value)
+        return T(parent(v).metadata.fill_value)
     end
-    return v.zarray.attrs[String(name)]
+    return parent(v).attrs[String(name)]
 end
 
 function CDM.defAttrib(v::ZarrVariable, name::SymbolOrString, value)
     @assert iswritable(dataset(v))
     @assert String(name) !== "_FillValue"
 
-    v.zarray.attrs[String(name)] = value
+    parent(v).attrs[String(name)] = value
 
-    storage = v.zarray.storage
+    storage = parent(v).storage
     io = IOBuffer()
-    JSON.print(io, v.zarray.attrs)
-    storage[v.zarray.path, ".zattrs"] = take!(io)
+
+    JSON.print(io, parent(v).attrs)
+    storage[parent(v).path,".zattrs"] = take!(io)
 end
 
-function _iscoordvar(v)
-    dn = dimnames(v)
-    if length(dn) == 0
-        return false
-    end
-    return name(v) == first(dn)
-end
+
+# DiskArray methods
+eachchunk(v::ZarrVariable) = eachchunk(parent(v))
+haschunks(v::ZarrVariable) = haschunks(parent(v))
+eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
+haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 
 """
     defVar(ds::ZarrDataset, name::SymbolOrString, vtype::DataType, dimensionnames; 

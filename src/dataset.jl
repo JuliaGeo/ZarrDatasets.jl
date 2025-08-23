@@ -63,8 +63,8 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
     ZarrDataset(zg::Zarr.ZGroup; kw...)
     ZarrDataset(f::Function, url::AbstractString, mode = "r"; kw...)
 
-Open the zarr dataset at the url or path `url`. The mode can only be `"r"` (read-only)
-or `"c"` (create). `ds` supports the API of the
+Open the zarr dataset at the url or path `url`. The mode can be `"r"` (read-only),
+`"w"` (write), or `"c"` (create). `ds` supports the API of the
 [JuliaGeo/CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl).
 
 # Keywords
@@ -108,26 +108,33 @@ zos1 = ZarrDataset(url) do ds
 end # implicit call to close(ds)
 ```
 """
-function ZarrDataset(url::AbstractString, mode="r";
-    parentdataset=nothing,
-    _omitcode=[404, 403],
-    maskingvalue=missing,
-    attrib=Dict(),
-)
-    zg = if mode == "r"
+
+function ZarrDataset(url::AbstractString, mode = "r";
+                     parentdataset = nothing,
+                     _omitcode = [404,403],
+                     maskingvalue = missing,
+                     attrib = Dict(),
+                     )
+
+    dimensions = OrderedDict{Symbol,Int}()
+
+    zg = if mode in ("w", "r")
         zg = Zarr.zopen(url, mode)
     elseif mode == "c"
         store = Zarr.DirectoryStore(url)
-        zg = zgroup(store, "", attrs=Dict{String,Any}(attrib))
+        zg = zgroup(store, "", attrs = Dict{String,Any}(attrib))
+    else
+        throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
     ZarrDataset(zg; mode, parentdataset, _omitcode, maskingvalue, attrib)
 end
-function ZarrDataset(store::Zarr.AbstractStore, mode="r";
-    parentdataset=nothing,
-    _omitcode=[404, 403],
-    maskingvalue=missing,
-    attrib=Dict(),
-)
+
+function ZarrDataset(store::Zarr.AbstractStore, mode = "r";
+                     parentdataset = nothing,
+                     _omitcode = [404,403],
+                     maskingvalue = missing,
+                     attrib = Dict(),
+                     )
     return ZarrDataset(zopen(store, mode); mode, parentdataset, _omitcode, maskingvalue, attrib)
 end
 function ZarrDataset(zg::Zarr.ZGroup;
