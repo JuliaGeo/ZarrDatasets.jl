@@ -17,6 +17,15 @@ CDM.dim(ds::ZarrDataset, dimname::SymbolOrString) = ds.dimensions[Symbol(dimname
 CDM.varnames(ds::ZarrDataset) = keys(ds.zgroup.arrays)
 CDM.attribnames(ds::ZarrDataset) = keys(ds.zgroup.attrs)
 CDM.attrib(ds::ZarrDataset, name::SymbolOrString) = ds.zgroup.attrs[String(name)]
+CDM.groupname(ds::ZarrDataset) = ds.zgroup.path
+function CDM.path(ds::ZarrDataset) 
+    storage = ds.zgroup.storage
+    path = storage.path
+    if isempty(path)
+        path = storage.parent.url
+    end
+    return path
+end
 
 # function CDM.unlimited(ds::ZarrDataset)
 #     ul = ds.unlimited
