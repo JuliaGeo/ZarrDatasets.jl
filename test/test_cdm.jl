@@ -1,15 +1,9 @@
-using CommonDataModel:
-    attribnames,
-    dataset,
-    iswritable,
-    load!,
-    parentdataset
+using CommonDataModel: attribnames, dataset, iswritable, load!, parentdataset
 using Dates
 using DiskArrays
 using NCDatasets
 using Test
 using ZarrDatasets
-
 
 fname = tempname()
 mkpath(fname)
@@ -18,11 +12,18 @@ nczarr_name = "file://" * fname * "#mode=zarr"
 @debug "filenames " nczarr_name fname
 v = randn(2, 3)
 ds = NCDataset(nczarr_name, "c")
-defVar(ds, "var", v, ("lon", "lat"), attrib=Dict(
-    "foo" => "bar",
-    "int_attribute" => 1,
-    "float_attribute" => 1.0,
-    "scale_factor" => 1.23))
+defVar(
+    ds,
+    "var",
+    v,
+    ("lon", "lat");
+    attrib=Dict(
+        "foo" => "bar",
+        "int_attribute" => 1,
+        "float_attribute" => 1.0,
+        "scale_factor" => 1.23,
+    ),
+)
 ds.attrib["title"] = "test file"
 close(ds)
 
@@ -69,7 +70,7 @@ end
 
 v = dsz["var"].var
 buffer = zeros(eltype(v), size(v))
-load!(v, buffer, :, :)
+load!(v,buffer,:,:)
 
 @test buffer == Array(ds["var"].var)
 

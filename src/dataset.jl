@@ -1,9 +1,11 @@
 # Base interface
 
 Base.keys(ds::ZarrDataset) = keys(ds.zgroup.arrays)
-Base.haskey(ds::ZarrDataset, varname::SymbolOrString) = haskey(ds.zgroup.arrays, String(varname))
+function Base.haskey(ds::ZarrDataset, varname::SymbolOrString)
+    haskey(ds.zgroup.arrays, String(varname))
+end
 
-# CommonDataModel.jl interface
+# CommonDataModel.jl interface methods
 
 CDM.name(v::ZarrDataset) = Zarr.zname(v.zgroup)
 function CDM.variable(ds::ZarrDataset, varname::SymbolOrString)
@@ -43,7 +45,7 @@ end
 # groups
 function CDM.defGroup(ds::ZarrDataset, groupname::SymbolOrString; attrib=Dict())
     _attrib = Dict{String,Any}(attrib)
-    zg = zgroup(ds.zgroup, String(groupname), attrs=_attrib)
+    zg = zgroup(ds.zgroup, String(groupname); attrs=_attrib)
     dimensions = OrderedDict{Symbol,Int}()
     return ZarrDataset(ds, zg, dimensions, ds.iswritable, ds.maskingvalue)
 end
@@ -59,9 +61,12 @@ CDM.iswritable(ds::ZarrDataset) = ds.iswritable
 CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
 
 """
-    ZarrDataset(url::AbstractString, mode = "r"; kw...)
-    ZarrDataset(zg::Zarr.ZGroup; kw...)
-    ZarrDataset(f::Function, url::AbstractString, mode = "r"; kw...)
+    ds = ZarrDataset(url::AbstractString,mode = "r";
+                     _omitcode = [404,403],
+                     maskingvalue = missing)
+    ZarrDataset(zg::Zarr.ZGroup; _omitcode, maskingvalue)
+    ZarrDataset(f::Function,url::AbstractString,mode = "r";
+                     maskingvalue = missing)
 
 Open the zarr dataset at the url or path `url`. The mode can be `"r"` (read-only),
 `"w"` (write), or `"c"` (create). `ds` supports the API of the
@@ -108,36 +113,42 @@ zos1 = ZarrDataset(url) do ds
 end # implicit call to close(ds)
 ```
 """
-
-function ZarrDataset(url::AbstractString, mode = "r";
-                     parentdataset = nothing,
-                     _omitcode = [404,403],
-                     maskingvalue = missing,
-                     attrib = Dict(),
-                     )
-
+function ZarrDataset(
+    url::AbstractString,
+    mode="r";
+    parentdataset=nothing,
+    _omitcode=[404, 403],
+    maskingvalue=missing,
+    attrib=Dict(),
+)
     dimensions = OrderedDict{Symbol,Int}()
 
     zg = if mode in ("w", "r")
         zg = Zarr.zopen(url, mode)
     elseif mode == "c"
         store = Zarr.DirectoryStore(url)
-        zg = zgroup(store, "", attrs = Dict{String,Any}(attrib))
+        zg = zgroup(store, ""; attrs=Dict{String,Any}(attrib))
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
     ZarrDataset(zg; mode, parentdataset, _omitcode, maskingvalue, attrib)
 end
 
-function ZarrDataset(store::Zarr.AbstractStore, mode = "r";
-                     parentdataset = nothing,
-                     _omitcode = [404,403],
-                     maskingvalue = missing,
-                     attrib = Dict(),
-                     )
-    return ZarrDataset(zopen(store, mode); mode, parentdataset, _omitcode, maskingvalue, attrib)
+function ZarrDataset(
+    store::Zarr.AbstractStore,
+    mode="r";
+    parentdataset=nothing,
+    _omitcode=[404, 403],
+    maskingvalue=missing,
+    attrib=Dict(),
+)
+    return ZarrDataset(
+        zopen(store, mode); mode, parentdataset, _omitcode, maskingvalue, attrib
+    )
 end
-function ZarrDataset(zg::Zarr.ZGroup;
+
+function ZarrDataset(
+    zg::Zarr.ZGroup;
     mode="r",
     parentdataset=nothing,
     _omitcode=[404, 403],
@@ -145,14 +156,16 @@ function ZarrDataset(zg::Zarr.ZGroup;
     attrib=Dict(),
 )
     dimensions = ZarrDatasets.OrderedDict{Symbol,Int}()
+    iswritable = false
     if (zg.storage isa Zarr.HTTPStore) ||
-       (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
+        (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
         @debug "omit chunks on HTTP error" _omitcode
         Zarr.missing_chunk_return_code!(zg.storage, _omitcode)
     end
 
     for (varname, zarray) in zg.arrays
-        for (dimname, dimlen) in zip(reverse(zarray.attrs["_ARRAY_DIMENSIONS"]), size(zarray))
+        for (dimname, dimlen) in
+            zip(reverse(zarray.attrs["_ARRAY_DIMENSIONS"]), size(zarray))
             dn = Symbol(dimname)
             if haskey(dimensions, dn)
                 @assert dimensions[dn] == dimlen
@@ -162,11 +175,17 @@ function ZarrDataset(zg::Zarr.ZGroup;
         end
     end
 
-    return ZarrDataset(parentdataset, zg, dimensions, mode == "r" ? false : zg.writeable, maskingvalue)
-
+    return ZarrDataset(
+        parentdataset, zg, dimensions, mode == "r" ? false : zg.writeable, maskingvalue
+    )
 end
-ZarrDataset(fnames::AbstractArray{<:AbstractString,N}, args...; kwargs...) where {N} =
+
+function ZarrDataset(
+    fnames::AbstractArray{<:AbstractString,N}, args...; kwargs...
+) where {N}
     MFDataset(ZarrDataset, fnames, args...; kwargs...)
+end
+
 function ZarrDataset(f::Function, args...; kwargs...)
     ds = ZarrDataset(args...; kwargs...)
     try
@@ -175,6 +194,8 @@ function ZarrDataset(f::Function, args...; kwargs...)
         close(ds)
     end
 end
+
+# Utility functions
 
 function _dim(ds::ZarrDataset, dimname::SymbolOrString)
     dimlen = get(ds.dimensions, Symbol(dimname), nothing)

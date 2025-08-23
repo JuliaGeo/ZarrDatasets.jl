@@ -1,27 +1,41 @@
+# Base interface methods
 
-Base.getindex(v::ZarrVariable,ij::Union{Integer,Colon,AbstractVector{<:Integer}}...) = parent(v)[ij...]
-function Base.setindex!(v::ZarrVariable,data,ij::Union{Integer,Colon,AbstractVector{<:Integer}}...)
+function Base.getindex(
+    v::ZarrVariable, ij::Union{Integer,Colon,AbstractVector{<:Integer}}...
+)
+    parent(v)[ij...]
+end
+function Base.setindex!(
+    v::ZarrVariable, data, ij::Union{Integer,Colon,AbstractVector{<:Integer}}...
+)
     parent(v)[ij...] = data
 end
 Base.size(v::ZarrVariable) = size(parent(v))
 Base.parent(v::ZarrVariable) = v.zarray
 
+# DiskArrays.jl interface methods
 
-CDM.load!(v::ZarrVariable,buffer,ij...) = buffer .= view(parent(v),ij...)
+eachchunk(v::ZarrVariable) = eachchunk(parent(v))
+haschunks(v::ZarrVariable) = haschunks(parent(v))
+eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
+haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
+
+# CommonDataModel.jl interface methods
+
+CDM.load!(v::ZarrVariable, buffer, ij...) = buffer .= view(parent(v), ij...)
 CDM.name(v::ZarrVariable) = Zarr.zname(parent(v))
 CDM.dimnames(v::ZarrVariable) = Tuple(reverse(parent(v).attrs["_ARRAY_DIMENSIONS"]))
-
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
 function CDM.attribnames(v::ZarrVariable)
-    names = filter(!=("_ARRAY_DIMENSIONS"),keys(parent(v).attrs))
+    names = filter(!=("_ARRAY_DIMENSIONS"), keys(parent(v).attrs))
     if !isnothing(parent(v).metadata.fill_value) && !_iscoordvar(v)
-        push!(names,"_FillValue")
+        push!(names, "_FillValue")
     end
     return names
 end
 
-function CDM.attrib(v::ZarrVariable{T},name::SymbolOrString) where T
+function CDM.attrib(v::ZarrVariable{T}, name::SymbolOrString) where {T}
     if String(name) == "_FillValue" && !isnothing(parent(v).metadata.fill_value)
         return T(parent(v).metadata.fill_value)
     end
@@ -38,15 +52,8 @@ function CDM.defAttrib(v::ZarrVariable, name::SymbolOrString, value)
     io = IOBuffer()
 
     JSON.print(io, parent(v).attrs)
-    storage[parent(v).path,".zattrs"] = take!(io)
+    storage[parent(v).path, ".zattrs"] = take!(io)
 end
-
-
-# DiskArray methods
-eachchunk(v::ZarrVariable) = eachchunk(parent(v))
-haschunks(v::ZarrVariable) = haschunks(parent(v))
-eachchunk(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = eachchunk(v.var)
-haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 
 """
     defVar(ds::ZarrDataset, name::SymbolOrString, vtype::DataType, dimensionnames; 
@@ -62,8 +69,15 @@ does not necessarily indicate a missing value.
 
 See also `CommonDataModel.defVar` for more information.
 """
-function CDM.defVar(ds::ZarrDataset, name::SymbolOrString, vtype::DataType, dimensionnames; 
-    chunksizes=nothing, attrib=Dict(), fillvalue=nothing, kwargs...
+function CDM.defVar(
+    ds::ZarrDataset,
+    name::SymbolOrString,
+    vtype::DataType,
+    dimensionnames;
+    chunksizes=nothing,
+    attrib=Dict(),
+    fillvalue=nothing,
+    kwargs...,
 )
     @assert iswritable(ds)
 
@@ -83,15 +97,25 @@ function CDM.defVar(ds::ZarrDataset, name::SymbolOrString, vtype::DataType, dime
     end
 
     zarray = zcreate(
-        vtype, ds.zgroup, name, _size...;
+        vtype,
+        ds.zgroup,
+        name,
+        _size...;
         chunks=chunksizes,
         attrs=_attrib,
         fill_value=fillvalue,
-        kwargs...
+        kwargs...,
     )
 
-    # TODO zv is not used?
-    zv = ZarrVariable{vtype,ndims(zarray),typeof(zarray),typeof(ds)}(zarray, ds)
-
     return ds[name]
+end
+
+# Utility functions
+
+function _iscoordvar(v)
+    dn = dimnames(v)
+    if length(dn) == 0
+        return false
+    end
+    return name(v) == first(dn)
 end
