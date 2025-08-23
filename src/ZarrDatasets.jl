@@ -1,10 +1,6 @@
 module ZarrDatasets
 
-import Base:
-    checkbounds,
-    getindex,
-    setindex!,
-    size
+import Base: checkbounds, getindex, setindex!, size
 
 import CommonDataModel:
     CFVariable,
@@ -26,18 +22,19 @@ import CommonDataModel:
     parentdataset,
     variable
 
-import DiskArrays:
-    eachchunk,
-    haschunks
+import DiskArrays: eachchunk, haschunks
 
 import CommonDataModel as CDM
+using JSON: JSON
+
 using DataStructures
 using Zarr
-import JSON
+
+export ZarrDataset
+export defDim, defVar, defGroup
 
 include("types.jl")
 include("dataset.jl")
 include("variable.jl")
 
-export ZarrDataset
 end

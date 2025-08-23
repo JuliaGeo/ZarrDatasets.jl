@@ -10,11 +10,7 @@ makedocs(;
         canonical="https://juliageo.github.io/ZarrDatasets.jl",
         assets=String[],
     ),
-    pages=[
-        "Home" => "index.md",
-    ],
+    pages=["Home" => "index.md"],
 )
 
-deploydocs(;
-    repo="github.com/JuliaGeo/ZarrDatasets.jl",
-)
+deploydocs(; repo="github.com/JuliaGeo/ZarrDatasets.jl")
