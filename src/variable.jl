@@ -13,6 +13,7 @@ function writeblock!(v::ZarrVariable{T,N},
     indexes::Vararg{OrdinalRange, N}) where {T, N}
 
     return writeblock!(parent(v), data, indexes...)
+end
 
 Base.size(v::ZarrVariable) = size(parent(v))
 Base.parent(v::ZarrVariable) = v.zarray
