@@ -41,6 +41,51 @@ data_units = ds["varname"].attrib["units"]
 Modules = [ZarrDatasets]
 ```
 
+### Interoperability with Zarr.jl
+
+Here is a example of how to create a dataset with Zarr.jl that can be read in ZarrDatasets.jl.
+As in python-xarray, ZaraDatasets.jl assume that there is a `_ARRAY_DIMENSIONS` attribute containing a list of the dimension names.
+Note that Zarr.jl uses the C-ordering per default (for compatability with python). Therefore if an array has e.g. the dimensions lon x lat,
+the corresponding `_ARRAY_DIMENSIONS` attribute is  `("lat","lon")`.
+
+```julia
+using Zarr
+using ZarrDatasets
+using Test
+
+# your file name
+fname = tempname()
+
+# sample data (lon x lat)
+data = rand(100,101)
+
+store = Zarr.DirectoryStore(fname)
+zg = zgroup(store)
+
+# create a variable with the name "temp" where the
+# first dimension in lon and the second dimension is lat
+z = zcreate(Float64,zg,"temp",size(data)...;
+            fill_value = 9999, # optional
+            attrs = Dict("_ARRAY_DIMENSIONS" => ("lat","lon"))) # important
+z .= data
+
+# read data
+ds = ZarrDataset(fname)
+
+# output
+#  temp   (100 × 101)
+#    Datatype:    Union{Missing, Float64} (Float64)
+#    Dimensions:  lon × lat
+#    Attributes:
+#     _FillValue           = 9999.0
+
+
+data2 = ds["temp"][:,:]
+
+@test data == data2
+```
+
+
 ### Differences between Zarr and NetCDF files
 
 * All metadata (in particular attributes) is stored in JSON files for the Zarr format with the following implications:
