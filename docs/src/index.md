@@ -85,6 +85,18 @@ data2 = ds["temp"][:,:]
 @test data == data2
 ```
 
+#### Using a pre-existing Zarr array or store
+
+It's also simple to wrap an existing Zarr array, or a manually constructed Zarr store, in a `ZarrDataset`:
+
+```julia
+using Zarr, ZarrDatasets
+zg = zopen("/path/to/zarr")
+zd = ZarrDataset(zg)
+```
+
+and you can pass a constructed `Zarr.AbstractStore` similarly.
+
 
 ### Differences between Zarr and NetCDF files
 
