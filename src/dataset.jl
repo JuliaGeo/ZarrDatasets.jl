@@ -124,7 +124,7 @@ function ZarrDataset(
 )
     dimensions = OrderedDict{Symbol,Int}()
 
-    zg = if mode in ("w", "r")
+    if mode in ("w", "r")
         zg = Zarr.zopen(url, mode)
 
         if !(zg isa Zarr.ZGroup)
