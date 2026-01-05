@@ -68,7 +68,8 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 
-Open the zarr dataset at the url or path `url`. The mode can be `"r"` (read-only),
+Open the zarr dataset at the url or path `url`. The URL must be a zgroup (not a zarray).
+The mode can be `"r"` (read-only),
 `"w"` (write), or `"c"` (create). `ds` supports the API of the
 [JuliaGeo/CommonDataModel.jl](https://github.com/JuliaGeo/CommonDataModel.jl).
 
@@ -125,6 +126,10 @@ function ZarrDataset(
 
     zg = if mode in ("w", "r")
         zg = Zarr.zopen(url, mode)
+
+        if !(zg isa Zarr.ZGroup)
+            error("the url '$url' should be a ZGroup while it has the type of $(typeof(zg))")
+        end
     elseif mode == "c"
         store = Zarr.DirectoryStore(url)
         zg = zgroup(store, ""; attrs=Dict{String,Any}(attrib))
