@@ -85,9 +85,9 @@ data2 = ds["temp"][:,:]
 @test data == data2
 ```
 
-#### Using a pre-existing Zarr array or store
+#### Using a pre-existing Zarr group or store
 
-It's also simple to wrap an existing Zarr array, or a manually constructed Zarr store, in a `ZarrDataset`:
+It's also simple to wrap an existing Zarr group, or a manually constructed Zarr store, in a `ZarrDataset`:
 
 ```julia
 using Zarr, ZarrDatasets
