@@ -122,7 +122,6 @@ function ZarrDataset(
     maskingvalue=missing,
     attrib=Dict(),
 )
-    dimensions = OrderedDict{Symbol,Int}()
 
     if mode in ("w", "r")
         zg = Zarr.zopen(url, mode)
@@ -136,6 +135,7 @@ function ZarrDataset(
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
+
     ZarrDataset(zg; mode, parentdataset, _omitcode, maskingvalue, attrib)
 end
 
