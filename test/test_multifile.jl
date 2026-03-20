@@ -40,6 +40,7 @@ for (name, len) in ds.dim
 end
 
 for (varname, v) in ds
+    local v2
     @test haskey(dsz, varname)
 
     v2 = dsz[varname]

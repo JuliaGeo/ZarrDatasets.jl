@@ -29,6 +29,7 @@ ds.attrib["history"] = "test"
 close(ds)
 
 for ds in ZarrDataset.((Zarr.storefromstring(fname)[1], Zarr.zopen(fname)))
+    local zv, io, str
     zv = ds[varname]
 
     @test zv.attrib["number"] == 12

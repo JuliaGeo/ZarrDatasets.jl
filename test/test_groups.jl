@@ -61,5 +61,4 @@ ds = TDS(fname, "r")
 
 @test ds.group[group_name].attrib["int_attrib"] == 42
 
-display(ds)
 close(ds)
