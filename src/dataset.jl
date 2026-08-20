@@ -79,10 +79,15 @@ The mode can be `"r"` (read-only),
     for missing chunks. For compatibility with python's Zarr, the HTTP error 403
     (permission denied) is also used to missing chunks in addition to 404 (not
     found). Default [404, 403].
-- `maskingvalue`: The parameter `maskingvalue` allows to define which special 
+- `maskingvalue`: The parameter `maskingvalue` allows to define which special
     value should be used as replacement for fill values. The default is `missing`.
     Defaults to `missing``.
 - `attrib`: Attributes, defualts to `Dict()`
+- `consolidated`: if `true`, open the store from its consolidated metadata
+    (the `.zmetadata` key written by python's `zarr.consolidate_metadata`)
+    instead of listing the store. This is required for stores whose backend
+    listing is truncated or unavailable (e.g. paginated cloud buckets), where
+    listing would otherwise miss most arrays. Defaults to `false`.
 
 Example:
 
@@ -121,10 +126,11 @@ function ZarrDataset(
     _omitcode=[404, 403],
     maskingvalue=missing,
     attrib=Dict(),
+    consolidated=false,
 )
 
     if mode in ("w", "r")
-        zg = Zarr.zopen(url, mode)
+        zg = Zarr.zopen(url, mode; consolidated)
 
         if !(zg isa Zarr.ZGroup)
             error("the url '$url' should be a ZGroup while it has the type of $(typeof(zg))")
