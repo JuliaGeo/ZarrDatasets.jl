@@ -176,7 +176,7 @@ function ZarrDataset(
 
     for (varname, zarray) in zg.arrays
         for (dimname, dimlen) in
-            zip(reverse(zarray.attrs["_ARRAY_DIMENSIONS"]), size(zarray))
+            zip(reverse(dimension_names(zarray)), size(zarray))
             dn = Symbol(dimname)
             if haskey(dimensions, dn)
                 @assert dimensions[dn] == dimlen

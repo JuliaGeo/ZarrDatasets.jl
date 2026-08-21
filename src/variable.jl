@@ -1,5 +1,10 @@
 # Base interface methods
 
+function dimension_names(zarray::ZArray)
+    # add special case for v3: dimension_names in metadata
+    return zarray.attrs["_ARRAY_DIMENSIONS"]
+end
+
 function readblock!(v::ZarrVariable{T, N},
     aout,
     indexes::Vararg{OrdinalRange, N}) where {T, N}
@@ -29,11 +34,16 @@ haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 
 CDM.load!(v::ZarrVariable, buffer, ij...) = buffer .= view(parent(v), ij...)
 CDM.name(v::ZarrVariable) = Zarr.zname(parent(v))
-CDM.dimnames(v::ZarrVariable) = Tuple(reverse(parent(v).attrs["_ARRAY_DIMENSIONS"]))
+CDM.dimnames(v::ZarrVariable) = Tuple(reverse(dimension_names(parent(v))))
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
 function CDM.attribnames(v::ZarrVariable)
-    names = filter(!=("_ARRAY_DIMENSIONS"), keys(parent(v).attrs))
+    names = keys(parent(v).attrs)
+
+    if dataset(v).zgroup.zarr_format == Zarr.ZarrFormat(2)
+        names = filter(!=("_ARRAY_DIMENSIONS"), names)
+    end
+
     if !isnothing(parent(v).metadata.fill_value) && !_iscoordvar(v)
         push!(names, "_FillValue")
     end
@@ -90,8 +100,17 @@ function CDM.defVar(
         fillvalue = get(attrib, "_FillValue", nothing)
     end
 
+    if !isnothing(fillvalue)
+        fillvalue = vtype(fillvalue)
+    end
+
     _attrib = Dict{String,Any}(attrib)
-    _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
+
+    if ds.zgroup.zarr_format == Zarr.ZarrFormat(2)
+        _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
+    else
+        error("zarr v3 is currently not implemented")
+    end
 
     _size = ntuple(length(dimensionnames)) do i
         _dim(ds, dimensionnames[i])
