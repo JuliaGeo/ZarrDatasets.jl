@@ -160,7 +160,7 @@ function ZarrDataset(
     maskingvalue=missing,
     attrib=Dict(),
 )
-    dimensions = ZarrDatasets.OrderedDict{Symbol,Int}()
+    dimensions = OrderedDict{Symbol,Int}()
     iswritable = false
     if (zg.storage isa Zarr.HTTPStore) ||
         (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
