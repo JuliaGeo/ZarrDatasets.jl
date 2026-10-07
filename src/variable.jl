@@ -40,7 +40,7 @@ CDM.dataset(v::ZarrVariable) = v.parentdataset
 function CDM.attribnames(v::ZarrVariable)
     names = keys(parent(v).attrs)
 
-    if dataset(v).zgroup.zarr_format == Zarr.ZarrFormat(2)
+    if dataset(v).zgroup.zarr_format == Zarr.ZarrCore.ZarrFormat(2)
         names = filter(!=("_ARRAY_DIMENSIONS"), names)
     end
 
@@ -106,7 +106,7 @@ function CDM.defVar(
 
     _attrib = Dict{String,Any}(attrib)
 
-    if ds.zgroup.zarr_format == Zarr.ZarrFormat(2)
+    if ds.zgroup.zarr_format == Zarr.ZarrCore.ZarrFormat(2)
         _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
     else
         error("zarr v3 is currently not implemented")
