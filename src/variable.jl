@@ -33,14 +33,14 @@ haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 # CommonDataModel.jl interface methods
 
 CDM.load!(v::ZarrVariable, buffer, ij...) = buffer .= view(parent(v), ij...)
-CDM.name(v::ZarrVariable) = Zarr.zname(parent(v))
+CDM.name(v::ZarrVariable) = ZarrCore.zname(parent(v))
 CDM.dimnames(v::ZarrVariable) = Tuple(reverse(dimension_names(parent(v))))
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
 function CDM.attribnames(v::ZarrVariable)
     names = keys(parent(v).attrs)
 
-    if dataset(v).zgroup.zarr_format == Zarr.ZarrCore.ZarrFormat(2)
+    if dataset(v).zgroup.zarr_format == ZarrCore.ZarrFormat(2)
         names = filter(!=("_ARRAY_DIMENSIONS"), names)
     end
 
@@ -106,7 +106,7 @@ function CDM.defVar(
 
     _attrib = Dict{String,Any}(attrib)
 
-    if ds.zgroup.zarr_format == Zarr.ZarrCore.ZarrFormat(2)
+    if ds.zgroup.zarr_format == ZarrCore.ZarrFormat(2)
         _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
     else
         error("zarr v3 is currently not implemented")

@@ -34,7 +34,7 @@ import CommonDataModel as CDM
 using JSON: JSON
 
 using DataStructures
-using Zarr
+using ZarrCore
 
 export ZarrDataset
 export defDim, defVar, defGroup
