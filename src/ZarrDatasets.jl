@@ -31,8 +31,6 @@ import DiskArrays:
     writeblock!
 
 import CommonDataModel as CDM
-using JSON: JSON
-
 using DataStructures
 using ZarrCore
 

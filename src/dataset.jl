@@ -36,10 +36,7 @@ function CDM.defAttrib(ds::ZarrDataset, name::SymbolOrString, value)
     @assert iswritable(ds)
     ds.zgroup.attrs[String(name)] = value
 
-    storage = ds.zgroup.storage
-    io = IOBuffer()
-    JSON.print(io, ds.zgroup.attrs)
-    storage[ds.zgroup.path, ".zattrs"] = take!(io)
+    ZarrCore.writeattrs(_zarrformat(ds), ds.zgroup.storage, ds.zgroup.path, ds.zgroup.attrs)
 end
 
 # groups
@@ -83,6 +80,8 @@ The mode can be `"r"` (read-only),
     value should be used as replacement for fill values. The default is `missing`.
     Defaults to `missing``.
 - `attrib`: Attributes, defualts to `Dict()`
+- `zarr_format`: Zarr format used when creating a dataset with mode `"c"` (2 or 3).
+    Defaults to `2`.
 - `consolidated`: if `true`, open the store from its consolidated metadata
     (the `.zmetadata` key written by python's `zarr.consolidate_metadata`)
     instead of listing the store. This is required for stores whose backend
@@ -127,6 +126,7 @@ function ZarrDataset(
     maskingvalue=missing,
     attrib=Dict(),
     consolidated=false,
+    zarr_format=2,
 )
 
     if mode in ("w", "r")
@@ -137,7 +137,7 @@ function ZarrDataset(
         end
     elseif mode == "c"
         store = ZarrCore.DirectoryStore(url)
-        zg = zgroup(store, ""; attrs=Dict{String,Any}(attrib))
+        zg = zgroup(store, "", zarr_format; attrs=Dict{String,Any}(attrib))
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
@@ -174,8 +174,14 @@ function ZarrDataset(
     end
 
     for (varname, zarray) in zg.arrays
-        for (dimname, dimlen) in
-            zip(reverse(dimension_names(zarray)), size(zarray))
+        names = dimension_names(zarray)
+        if isnothing(names) || any(isnothing, names)
+            throw(ArgumentError(
+                "Zarr array '$varname' has unnamed dimensions; ZarrDatasets requires every dimension to have a name",
+            ))
+        end
+
+        for (dimname, dimlen) in zip(names, size(zarray))
             dn = Symbol(dimname)
             if haskey(dimensions, dn)
                 @assert dimensions[dn] == dimlen
