@@ -1,8 +1,14 @@
 # Base interface methods
 
 function dimension_names(zarray::ZArray)
-    # add special case for v3: dimension_names in metadata
-    return zarray.attrs["_ARRAY_DIMENSIONS"]
+    zarr_format = ZarrCore.zarr_format(zarray)
+    if zarr_format == ZarrCore.ZarrFormat(2)
+        return reverse(zarray.attrs["_ARRAY_DIMENSIONS"])
+    elseif zarr_format == ZarrCore.ZarrFormat(3)
+        return ZarrCore.dimension_names(zarray)
+    else
+        throw(ArgumentError("unsupported Zarr format $zarr_format"))
+    end
 end
 
 function readblock!(v::ZarrVariable{T, N},
@@ -33,14 +39,15 @@ haschunks(v::CFVariable{T,N,<:ZarrVariable}) where {T,N} = haschunks(v.var)
 # CommonDataModel.jl interface methods
 
 CDM.load!(v::ZarrVariable, buffer, ij...) = buffer .= view(parent(v), ij...)
+
 CDM.name(v::ZarrVariable) = ZarrCore.zname(parent(v))
-CDM.dimnames(v::ZarrVariable) = Tuple(reverse(dimension_names(parent(v))))
+CDM.dimnames(v::ZarrVariable) = Tuple(dimension_names(parent(v)))
 CDM.dataset(v::ZarrVariable) = v.parentdataset
 
 function CDM.attribnames(v::ZarrVariable)
-    names = keys(parent(v).attrs)
+    names = collect(keys(parent(v).attrs))
 
-    if dataset(v).zgroup.zarr_format == ZarrCore.ZarrFormat(2)
+    if _zarrformat(v) == ZarrCore.ZarrFormat(2)
         names = filter(!=("_ARRAY_DIMENSIONS"), names)
     end
 
@@ -63,11 +70,12 @@ function CDM.defAttrib(v::ZarrVariable, name::SymbolOrString, value)
 
     parent(v).attrs[String(name)] = value
 
-    storage = parent(v).storage
-    io = IOBuffer()
-
-    JSON.print(io, parent(v).attrs)
-    storage[parent(v).path, ".zattrs"] = take!(io)
+    ZarrCore.writeattrs(
+        ZarrCore.zarr_format(parent(v)),
+        parent(v).storage,
+        parent(v).path,
+        parent(v).attrs,
+    )
 end
 
 """
@@ -106,10 +114,11 @@ function CDM.defVar(
 
     _attrib = Dict{String,Any}(attrib)
 
-    if ds.zgroup.zarr_format == ZarrCore.ZarrFormat(2)
+    zarr_format = _zarrformat(ds)
+    if zarr_format == ZarrCore.ZarrFormat(2)
         _attrib["_ARRAY_DIMENSIONS"] = reverse(dimensionnames)
-    else
-        error("zarr v3 is currently not implemented")
+    elseif zarr_format != ZarrCore.ZarrFormat(3)
+        throw(ArgumentError("unsupported Zarr format $zarr_format"))
     end
 
     _size = ntuple(length(dimensionnames)) do i
@@ -120,15 +129,17 @@ function CDM.defVar(
         chunksizes = _size
     end
 
+    zkwargs = (; chunks=chunksizes, attrs=_attrib, fill_value=fillvalue, kwargs...)
+    if zarr_format == ZarrCore.ZarrFormat(3)
+        zkwargs = merge(zkwargs, (; dimension_names=dimensionnames))
+    end
+
     zarray = zcreate(
         vtype,
         ds.zgroup,
         name,
         _size...;
-        chunks=chunksizes,
-        attrs=_attrib,
-        fill_value=fillvalue,
-        kwargs...,
+        zkwargs...,
     )
 
     return ds[name]
@@ -143,3 +154,6 @@ function _iscoordvar(v)
     end
     return name(v) == first(dn)
 end
+
+_zarrformat(ds::ZarrDataset) = ds.zgroup.zarr_format
+_zarrformat(ds::ZarrVariable) = _zarrformat(dataset(ds))
