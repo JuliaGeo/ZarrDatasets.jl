@@ -7,7 +7,7 @@ end
 
 # CommonDataModel.jl interface methods
 
-CDM.name(v::ZarrDataset) = Zarr.zname(v.zgroup)
+CDM.name(v::ZarrDataset) = ZarrCore.zname(v.zgroup)
 function CDM.variable(ds::ZarrDataset, varname::SymbolOrString)
     zarray = ds.zgroup.arrays[String(varname)]
     ZarrVariable{eltype(zarray),ndims(zarray),typeof(zarray),typeof(ds)}(zarray, ds)
@@ -64,7 +64,7 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
     ds = ZarrDataset(url::AbstractString,mode = "r";
                      _omitcode = [404,403],
                      maskingvalue = missing)
-    ZarrDataset(zg::Zarr.ZGroup; _omitcode, maskingvalue)
+    ZarrDataset(zg::ZarrCore.ZGroup; _omitcode, maskingvalue)
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 
@@ -130,13 +130,13 @@ function ZarrDataset(
 )
 
     if mode in ("w", "r")
-        zg = Zarr.zopen(url, mode; consolidated)
+        zg = ZarrCore.zopen(url, mode; consolidated)
 
-        if !(zg isa Zarr.ZGroup)
+        if !(zg isa ZarrCore.ZGroup)
             error("the url '$url' should be a ZGroup while it has the type of $(typeof(zg))")
         end
     elseif mode == "c"
-        store = Zarr.DirectoryStore(url)
+        store = ZarrCore.DirectoryStore(url)
         zg = zgroup(store, ""; attrs=Dict{String,Any}(attrib))
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
@@ -146,7 +146,7 @@ function ZarrDataset(
 end
 
 function ZarrDataset(
-    store::Zarr.AbstractStore,
+    store::ZarrCore.AbstractStore,
     mode="r";
     parentdataset=nothing,
     _omitcode=[404, 403],
@@ -159,7 +159,7 @@ function ZarrDataset(
 end
 
 function ZarrDataset(
-    zg::Zarr.ZGroup;
+    zg::ZarrCore.ZGroup;
     mode="r",
     parentdataset=nothing,
     _omitcode=[404, 403],
@@ -168,10 +168,9 @@ function ZarrDataset(
 )
     dimensions = OrderedDict{Symbol,Int}()
     iswritable = false
-    if (zg.storage isa Zarr.HTTPStore) ||
-        (zg.storage isa Zarr.ConsolidatedStore{Zarr.HTTPStore})
+    if ZarrCore.has_configurable_missing_chunks(zg.storage)
         @debug "omit chunks on HTTP error" _omitcode
-        Zarr.missing_chunk_return_code!(zg.storage, _omitcode)
+        ZarrCore.missing_chunk_return_code!(zg.storage, _omitcode)
     end
 
     for (varname, zarray) in zg.arrays
