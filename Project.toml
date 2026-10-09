@@ -1,6 +1,6 @@
 name = "ZarrDatasets"
 uuid = "519a4cdf-1362-424a-9ea1-b1d782dbb24b"
-authors = ["Alexander Barth <barth.alexander@gmail.com> and contributors"]
+authors = ["Alexander Barth <barth.alexander@gmail.com>, Rafael Schouten, Tiem van der Deure, Anshul Singhvi, Alex Gardner, Simon Kok Lupemba and contributors"]
 version = "0.1.7"
 
 [deps]

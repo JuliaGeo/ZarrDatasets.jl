@@ -10,7 +10,7 @@ for zarr_format in (2, 3)
         fname = tempname()
         mkdir(fname)
         gattrib = Dict("title" => "this is the title")
-        ds = ZarrDataset(fname, "c"; attrib=gattrib, zarr_format)
+        ds = ZarrDataset(fname, "c"; attrib=gattrib, format=zarr_format)
 
         ds.attrib["number"] = 1
         defDim(ds, "lon", 3)
@@ -52,7 +52,7 @@ for zarr_format in (2, 3)
         # fill value
 
         fname = tempname()
-        ds = ZarrDataset(fname, "c"; zarr_format)
+        ds = ZarrDataset(fname, "c"; format=zarr_format)
         defDim(ds, "lon", 100)
         lon = defVar(ds, "lon", Float32, ("lon",); fillvalue=9999.0)
         lon .= 1

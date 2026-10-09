@@ -80,7 +80,7 @@ The mode can be `"r"` (read-only),
     value should be used as replacement for fill values. The default is `missing`.
     Defaults to `missing``.
 - `attrib`: Attributes, defualts to `Dict()`
-- `zarr_format`: Zarr format used when creating a dataset with mode `"c"` (2 or 3).
+- `format`: Zarr format used when creating a dataset with mode `"c"` (2 or 3).
     Defaults to `2`.
 - `consolidated`: if `true`, open the store from its consolidated metadata
     (the `.zmetadata` key written by python's `zarr.consolidate_metadata`)
@@ -126,7 +126,7 @@ function ZarrDataset(
     maskingvalue=missing,
     attrib=Dict(),
     consolidated=false,
-    zarr_format=2,
+    format=2,
 )
 
     if mode in ("w", "r")
@@ -137,7 +137,7 @@ function ZarrDataset(
         end
     elseif mode == "c"
         store = ZarrCore.DirectoryStore(url)
-        zg = zgroup(store, "", zarr_format; attrs=Dict{String,Any}(attrib))
+        zg = zgroup(store, "", format; attrs=Dict{String,Any}(attrib))
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
