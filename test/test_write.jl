@@ -31,6 +31,8 @@ for zarr_format in (2, 3)
 
         ds = ZarrDataset(fname)
 
+        @test ZarrDatasets._zarrformat(ds) == ZarrDatasets.ZarrCore.ZarrFormat(zarr_format)
+
         zv = ds[varname]
 
         @test zv.attrib["number"] == 12
