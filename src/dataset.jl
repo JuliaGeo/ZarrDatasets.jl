@@ -7,7 +7,7 @@ end
 
 # CommonDataModel.jl interface methods
 
-CDM.name(v::ZarrDataset) = ZarrCore.zname(v.zgroup)
+CDM.name(v::ZarrDataset) = Zarr.zname(v.zgroup)
 function CDM.variable(ds::ZarrDataset, varname::SymbolOrString)
     zarray = ds.zgroup.arrays[String(varname)]
     ZarrVariable{eltype(zarray),ndims(zarray),typeof(zarray),typeof(ds)}(zarray, ds)
@@ -61,7 +61,7 @@ CDM.maskingvalue(ds::ZarrDataset) = ds.maskingvalue
     ds = ZarrDataset(url::AbstractString,mode = "r";
                      _omitcode = [404,403],
                      maskingvalue = missing)
-    ZarrDataset(zg::ZarrCore.ZGroup; _omitcode, maskingvalue)
+    ZarrDataset(zg::Zarr.ZGroup; _omitcode, maskingvalue)
     ZarrDataset(f::Function,url::AbstractString,mode = "r";
                      maskingvalue = missing)
 
@@ -158,7 +158,7 @@ function ZarrDataset(
 end
 
 function ZarrDataset(
-    store::ZarrCore.AbstractStore,
+    store::Zarr.AbstractStore,
     mode="r";
     parentdataset=nothing,
     _omitcode=[404, 403],
@@ -171,7 +171,7 @@ function ZarrDataset(
 end
 
 function ZarrDataset(
-    zg::ZarrCore.ZGroup;
+    zg::Zarr.ZGroup;
     mode="r",
     parentdataset=nothing,
     _omitcode=[404, 403],
@@ -180,6 +180,7 @@ function ZarrDataset(
 )
     dimensions = OrderedDict{Symbol,Int}()
     iswritable = false
+
     if ZarrCore.has_configurable_missing_chunks(zg.storage)
         @debug "omit chunks on HTTP error" _omitcode
         ZarrCore.missing_chunk_return_code!(zg.storage, _omitcode)
