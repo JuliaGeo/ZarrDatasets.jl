@@ -33,7 +33,8 @@ import DiskArrays:
 import CommonDataModel as CDM
 using DataStructures
 using Zarr
-using ZarrCore
+import ZarrCore
+import ZarrHTTP
 
 export ZarrDataset
 export defDim, defVar, defGroup

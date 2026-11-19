@@ -126,18 +126,30 @@ function ZarrDataset(
     maskingvalue=missing,
     attrib=Dict(),
     consolidated=false,
-    format=2,
+    format=nothing,
 )
 
-    if mode in ("w", "r")
-        zg = ZarrCore.zopen(url, mode; consolidated)
+    if isnothing(format)
+        kwargs = (; )
+    else
+        kwargs = (; zarr_format = ZarrCore.ZarrFormat(format))
+    end
 
-        if !(zg isa ZarrCore.ZGroup)
+    if mode in ("w", "r")
+        if startswith(url,"http:") || startswith(url,"https:")
+            # must set _omitcode early to avoid warning/error
+            store = ZarrHTTP.HTTPStore(url,Set(_omitcode))
+            zg = Zarr.zopen(store, mode; consolidated, kwargs...)
+        else
+            zg = Zarr.zopen(url, mode; consolidated, kwargs...)
+        end
+
+        if !(zg isa Zarr.ZGroup)
             error("the url '$url' should be a ZGroup while it has the type of $(typeof(zg))")
         end
     elseif mode == "c"
-        store = ZarrCore.DirectoryStore(url)
-        zg = zgroup(store, "", format; attrs=Dict{String,Any}(attrib))
+        store = Zarr.DirectoryStore(url)
+        zg = zgroup(store, "", (isnothing(format) ? 2 : format); attrs=Dict{String,Any}(attrib))
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
     end
