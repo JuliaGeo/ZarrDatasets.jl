@@ -33,7 +33,7 @@ function copernicus_marine_catalog(product_id,dataset_id,
 end
 
 product_id = "MEDSEA_MULTIYEAR_PHY_006_004"
-dataset_id = "med-cmcc-ssh-rean-d"
+dataset_id = "cmems_mod_med_phy-ssh_my_4.2km_P1D-m"
 
 url = copernicus_marine_catalog(product_id,dataset_id)
 ds = ZarrDataset(url);
