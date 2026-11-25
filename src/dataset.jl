@@ -88,6 +88,9 @@ The mode can be `"r"` (read-only),
     listing is truncated or unavailable (e.g. paginated cloud buckets), where
     listing would otherwise miss most arrays. Defaults to `false`.
 
+Other keywords are passed to `ZarrHTTP.HTTPStore` for an `http(s)` url, e.g.
+`headers = ["Authorization" => "Bearer ..."]` for a store that needs authentication.
+
 Example:
 
 ```julia
@@ -127,6 +130,7 @@ function ZarrDataset(
     attrib=Dict(),
     consolidated=false,
     format=nothing,
+    store_kw...,
 )
 
     if isnothing(format)
@@ -138,7 +142,7 @@ function ZarrDataset(
     if mode in ("w", "r")
         if startswith(url,"http:") || startswith(url,"https:")
             # must set _omitcode early to avoid warning/error
-            store = ZarrHTTP.HTTPStore(url,Set(_omitcode))
+            store = ZarrHTTP.HTTPStore(url,Set(_omitcode); store_kw...)
             zg = Zarr.zopen(store, mode; consolidated, kwargs...)
         else
             zg = Zarr.zopen(url, mode; consolidated, kwargs...)
