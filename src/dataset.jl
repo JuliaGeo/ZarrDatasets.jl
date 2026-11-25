@@ -88,8 +88,8 @@ The mode can be `"r"` (read-only),
     listing is truncated or unavailable (e.g. paginated cloud buckets), where
     listing would otherwise miss most arrays. Defaults to `false`.
 
-Other keywords are passed to `ZarrHTTP.HTTPStore` for an `http(s)` url, e.g.
-`headers = ["Authorization" => "Bearer ..."]` for a store that needs authentication.
+Other keywords are passed to the store constructor, e.g.
+`headers = ["Authorization" => "Bearer ..."]` for an `HTTPStore` that needs authentication.
 
 Example:
 
@@ -145,14 +145,14 @@ function ZarrDataset(
             store = ZarrHTTP.HTTPStore(url,Set(_omitcode); store_kw...)
             zg = Zarr.zopen(store, mode; consolidated, kwargs...)
         else
-            zg = Zarr.zopen(url, mode; consolidated, kwargs...)
+            zg = Zarr.zopen(url, mode; consolidated, kwargs..., store_kw...)
         end
 
         if !(zg isa Zarr.ZGroup)
             error("the url '$url' should be a ZGroup while it has the type of $(typeof(zg))")
         end
     elseif mode == "c"
-        store = Zarr.DirectoryStore(url)
+        store = Zarr.DirectoryStore(url; store_kw...)
         zg = zgroup(store, "", (isnothing(format) ? 2 : format); attrs=Dict{String,Any}(attrib))
     else
         throw(ArgumentError("mode must be \"r\", \"w\" or \"c\", got $mode"))
