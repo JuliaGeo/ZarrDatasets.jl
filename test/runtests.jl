@@ -8,5 +8,6 @@ using ZarrDatasets
     include("test_groups.jl")
     include("test_fillvalue.jl")
     include("test_preexisting.jl")
+    include("test_store_kw.jl")
     include("test_aqua.jl")
 end
